@@ -47,14 +47,14 @@ public class MonitoringActivity extends Activity implements MonitorNotifier {
 	}
 
 	@Override
-	public void didEnterRegion(Region region) { logToDisplay("didEnterRegion called"); }
+	public void didEnterRegion(Region region) { logToDisplay("didEnterRegion "+ region.getUniqueId() +" called"); }
 	@Override
 	public void didExitRegion(Region region) {
-		logToDisplay("didExitRegion called");
+		logToDisplay("didExitRegion "+ region.getUniqueId() +" called");
 	}
 	@Override
 	public void didDetermineStateForRegion(int state, Region region) {
-		logToDisplay("didDetermineStateForRegion called with state: " + (state == 1 ? "INSIDE ("+state+")" : "OUTSIDE ("+state+")"));
+		logToDisplay("didDetermineStateForRegion called with state: "+ region.getUniqueId() + " " + (state == 1 ? "INSIDE ("+state+")" : "OUTSIDE ("+state+")"));
 	}
 
 	private void requestPermissions() {
@@ -177,11 +177,18 @@ public class MonitoringActivity extends Activity implements MonitorNotifier {
 		// This is a toggle.  Each time we tap it, we start or stop
 		Button button = (Button) findViewById(R.id.enableButton);
 		if (BeaconManager.getInstanceForApplication(this).getMonitoredRegions().size() > 0) {
-			BeaconManager.getInstanceForApplication(this).stopMonitoring(BeaconReferenceApplication.wildcardRegion);
+			BeaconManager.getInstanceForApplication(this).stopMonitoring(BeaconReferenceApplication.entranceRegion);
+			BeaconManager.getInstanceForApplication(this).stopMonitoring(BeaconReferenceApplication.walkwayRegion);
+			BeaconManager.getInstanceForApplication(this).stopMonitoring(BeaconReferenceApplication.exitRegion);
+
 			button.setText("Enable Monitoring");
 		}
 		else {
-			BeaconManager.getInstanceForApplication(this).startMonitoring(BeaconReferenceApplication.wildcardRegion);
+			// BeaconManager.getInstanceForApplication(this).startMonitoring(BeaconReferenceApplication.wildcardRegion);
+			BeaconManager.getInstanceForApplication(this).startMonitoring(BeaconReferenceApplication.entranceRegion);
+			BeaconManager.getInstanceForApplication(this).startMonitoring(BeaconReferenceApplication.walkwayRegion);
+			BeaconManager.getInstanceForApplication(this).startMonitoring(BeaconReferenceApplication.exitRegion);
+
 			button.setText("Disable Monitoring");
 		}
 	}

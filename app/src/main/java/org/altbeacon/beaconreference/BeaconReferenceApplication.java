@@ -13,17 +13,30 @@ import android.os.Build;
 import android.util.Log;
 
 import org.altbeacon.beacon.BeaconManager;
+import org.altbeacon.beacon.BeaconParser;
+import org.altbeacon.beacon.Identifier;
 import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.logging.LogManager;
 import org.altbeacon.beacon.service.MonitoringStatus;
+
+import java.util.UUID;
 
 /**
  * Created by dyoung on 12/13/13.
  */
 public class BeaconReferenceApplication extends Application implements MonitorNotifier {
     private static final String TAG = "BeaconReferenceApp";
-    public static final Region wildcardRegion = new Region("wildcardRegion", null, null, null);
+    // public static final Region wildcardRegion = new Region("wildcardRegion", null, null, null);
+
+    // Note from xxxx
+    // 1. Load Region for each site
+    // 2. setBeaconLayout to decode iBeacon format
+    // 3. Adjust averaging time or add ARMA Filter
+
+    public static final Region entranceRegion = new Region("entranceRegion",Identifier.fromUuid(UUID.fromString("f7826da6-4fa2-4e98-8024-bc5b71e0893e")), Identifier.fromInt(7), Identifier.fromInt(1));
+    public static final Region walkwayRegion = new Region("walkwayRegion", Identifier.fromUuid(UUID.fromString("f7826da6-4fa2-4e98-8024-bc5b71e0893e")), Identifier.fromInt(7), Identifier.fromInt(14));
+    public static final Region exitRegion = new Region("exitRegion", Identifier.fromUuid(UUID.fromString("f7826da6-4fa2-4e98-8024-bc5b71e0893e")), Identifier.fromInt(7), Identifier.fromInt(7));
     public static boolean insideRegion = false;
 
     public void onCreate() {
@@ -37,9 +50,9 @@ public class BeaconReferenceApplication extends Application implements MonitorNo
         // layout expression for other beacon types, do a web search for "setBeaconLayout"
         // including the quotes.
         //
-        //beaconManager.getBeaconParsers().clear();
-        //beaconManager.getBeaconParsers().add(new BeaconParser().
-        //        setBeaconLayout("m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25"));
+        beaconManager.getBeaconParsers().clear();
+        beaconManager.getBeaconParsers().add(new BeaconParser().
+                setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
 
         beaconManager.setDebug(true);
 
@@ -50,7 +63,7 @@ public class BeaconReferenceApplication extends Application implements MonitorNo
         // communicate to users that your app is using resources in the background.
         //
 
-        /*
+
         Notification.Builder builder = new Notification.Builder(this);
         builder.setSmallIcon(R.drawable.ic_launcher);
         builder.setContentTitle("Scanning for Beacons");
@@ -78,7 +91,7 @@ public class BeaconReferenceApplication extends Application implements MonitorNo
         beaconManager.setBackgroundBetweenScanPeriod(0);
         beaconManager.setBackgroundScanPeriod(1100);
 
-        */
+
 
 
         Log.d(TAG, "setting up background monitoring in app onCreate");
@@ -90,7 +103,10 @@ public class BeaconReferenceApplication extends Application implements MonitorNo
             beaconManager.stopMonitoring(region);
         }
 
-        beaconManager.startMonitoring(wildcardRegion);
+        // beaconManager.startMonitoring(wildcardRegion);
+        beaconManager.startMonitoring(entranceRegion);
+        beaconManager.startMonitoring(walkwayRegion);
+        beaconManager.startMonitoring(exitRegion);
 
         // If you wish to test beacon detection in the Android Emulator, you can use code like this:
         // BeaconManager.setBeaconSimulator(new TimedBeaconSimulator() );
@@ -104,7 +120,7 @@ public class BeaconReferenceApplication extends Application implements MonitorNo
         // Send a notification to the user whenever a Beacon
         // matching a Region (defined above) are first seen.
         Log.d(TAG, "Sending notification.");
-        sendNotification();
+        sendNotification(arg0);
     }
 
     @Override
@@ -118,7 +134,7 @@ public class BeaconReferenceApplication extends Application implements MonitorNo
         // do nothing here. logging happens in MonitoringActivity
     }
 
-    private void sendNotification() {
+    private void sendNotification(Region region) {
         NotificationManager notificationManager =
                 (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
         Notification.Builder builder;
@@ -144,7 +160,7 @@ public class BeaconReferenceApplication extends Application implements MonitorNo
                         PendingIntent.FLAG_UPDATE_CURRENT
                 );
         builder.setSmallIcon(R.drawable.ic_launcher);
-        builder.setContentTitle("I detect a beacon");
+        builder.setContentTitle(region.getUniqueId());
         builder.setContentText("Tap here to see details in the reference app");
         builder.setContentIntent(resultPendingIntent);
         notificationManager.notify(1, builder.build());
